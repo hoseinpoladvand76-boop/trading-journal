@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ژورنال معاملاتی</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0d0e0c;color:#eee8d8;font-family:Tahoma,Arial}
+header{padding:18px;text-align:center;background:#171812;border-bottom:1px solid #393522}
+h1{margin:0;color:#e8bd4d;font-size:22px}
+main{max-width:700px;margin:auto;padding:15px 12px 90px}
+.card{background:#181913;border:1px solid #353223;border-radius:18px;padding:16px;margin-bottom:14px}
+h2{color:#e8bd4d;font-size:20px}
+h3{color:#e8bd4d;margin-top:0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;font-size:12px;color:#aaa38f;margin-bottom:5px}
+input,select,textarea{width:100%;padding:12px;border-radius:11px;border:1px solid #393522;background:#211f17;color:#fff}
+textarea{min-height:80px}
+button{border:0;border-radius:11px;padding:12px;cursor:pointer}
+.primary{background:#e8bd4d;color:#16140c;font-weight:bold;width:100%}
+.secondary{background:#27251c;color:#eee}
+.danger{background:#47231f;color:#ffd0c9}
+nav{position:fixed;bottom:0;left:0;right:0;background:#171812;border-top:1px solid #333124;display:flex;justify-content:center;z-index:5}
+nav button{background:none;color:#aaa38f;flex:1;max-width:175px;border-radius:0}
+nav button.active{color:#e8bd4d}
+.page{display:none}.page.active{display:block}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:#211f17;border-radius:12px;padding:12px;text-align:center}
+.stat small{display:block;color:#aaa38f}.stat b{font-size:19px;color:#e8bd4d}
+table{width:100%;border-collapse:collapse}
+td,th{padding:10px;border-bottom:1px solid #302e24;text-align:right;font-size:12px}
+th{color:#e8bd4d}
+.win{color:#9ed477}.loss{color:#e47b70}
+.trade{border-bottom:1px solid #302e24;padding:13px 0}
+.actions{display:flex;gap:7px;margin-top:8px}.actions button{flex:1}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>📈 ژورنال معاملاتی</h1>
+</header>
+
+<main>
+
+<section id="register" class="page active">
+<h2>ثبت معامله</h2>
+
+<div class="card">
+<h3>نتیجه معامله</h3>
+<div class="grid">
+<button class="primary" onclick="result='برد';this.parentNode.nextElementSibling.value='برد'">برد</button>
+<button class="danger" onclick="result='باخت';this.parentNode.nextElementSibling.value='باخت'">باخت</button>
+</div>
+<input type="hidden" id="result" value="برد">
+</div>
+
+<div class="card">
+<h3>اطلاعات اصلی</h3>
+<div class="grid">
+
+<div><label>تاریخ</label><input id="date" type="date"></div>
+<div><label>ساعت ورود</label><input id="entryTime" type="time"></div>
+
+<div><label>استراتژی</label>
+<input id="strategy" list="strategies" placeholder="SP2L">
+</div>
+
+<div><label>استراتژی مادر</label>
+<input id="parent" list="strategies" placeholder="SP2L">
+</div>
+
+<div><label>سشن</label>
+<select id="session">
+<option>نیویورک</option>
+<option>لندن</option>
+<option>آسیا</option>
+<option>سیدنی</option>
+</select>
+</div>
+
+<div><label>جهت</label>
+<select id="direction">
+<option>Long / خرید</option>
+<option>Short / فروش</option>
+</select>
+</div>
+
+<div><label>تایم‌فریم</label>
+<select id="tf">
+<option>M1</option><option>M5</option><option>M15</option>
+<option>M30</option><option>H1</option><option>H4</option>
+</select>
+</div>
+
+<div><label>نماد</label><input id="symbol" value="XAUUSD"></div>
+
+</div>
+</div>
+
+<div class="card">
+<h3>قیمت و ریسک</h3>
+<div class="grid">
+
+<div><label>Entry</label><input id="entry" type="number" step="any"></div>
+<div><label>SL</label><input id="sl" type="number" step="any"></div>
+<div><label>TP</label><input id="tp" type="number" step="any"></div>
+<div><label>Exit</label><input id="exit" type="number" step="any"></div>
+<div><label>R:R</label><input id="rr" type="number" step="any"></div>
+<div><label>ریسک</label><input id="risk" type="number" step="any"></div>
+<div><label>لات</label><input id="lot" type="number" step="any"></div>
+<div><label>ساعت خروج</label><input id="exitTime" type="time"></div>
+
+</div>
+</div>
+
+<div class="card">
+<h3>شرایط ورود</h3>
+
+<label>شرایط / فیلترها</label>
+<textarea id="conditions"
+placeholder="مثلاً ورود دوم، LL، زیر مووینگ، فاصله زیاد از MA..."></textarea>
+
+<br>
+
+<label>یادداشت معامله</label>
+<textarea id="notes"
+placeholder="اشتباه، دلیل ورود، نکته مهم..."></textarea>
+</div>
+
+<div class="card">
+<button class="primary" onclick="saveTrade()">💾 ذخیره معامله</button>
+</div>
+
+</section>
+
+
+<section id="stats" class="page">
+<h2>📊 آمار</h2>
+
+<div class="stats">
+<div class="stat"><small>کل معاملات</small><b id="total">0</b></div>
+<div class="stat"><small>برد</small><b id="wins">0</b></div>
+<div class="stat"><small>باخت</small><b id="losses">0</b></div>
+<div class="stat"><small>وین‌ریت</small><b id="winrate">0%</b></div>
+<div class="stat"><small>میانگین R:R</small><b id="avgrr">0</b></div>
+<div class="stat"><small>خالص R</small><b id="netr">0</b></div>
+</div>
+
+<div class="card">
+<h3>آمار به تفکیک استراتژی</h3>
+<div id="strategyStats"></div>
+</div>
+
+<div class="card">
+<h3>آمار به تفکیک سشن</h3>
+<div id="sessionStats"></div>
+</div>
+
+</section>
+
+
+<section id="history" class="page">
+<h2>📋 معاملات ثبت‌شده</h2>
+
+<div class="card">
+<input id="search" placeholder="جستجو..." oninput="renderHistory()">
+</div>
+
+<div class="card" id="historyList"></div>
+</section>
+
+
+<section id="backup" class="page">
+<h2>💾 پشتیبان</h2>
+
+<div class="card">
+<h3>پشتیبان‌گیری</h3>
+<p>تمام معاملاتت داخل یک فایل ذخیره می‌شود.</p>
+<button class="primary" onclick="backup()">دانلود پشتیبان</button>
+</div>
+
+<div class="card">
+<h3>بازیابی</h3>
+<input type="file" id="restore" accept=".json" onchange="restore(event)">
+</div>
+
+<div class="card">
+<button class="danger" onclick="deleteAll()">حذف تمام معاملات</button>
+</div>
+</section>
+
+</main>
+
+
+<datalist id="strategies">
+<option>SP2L</option>
+<option>SP2L2X</option>
+<option>Micro Map</option>
+</datalist>
+
+
+<nav>
+<button class="active" onclick="page('register',this)">➕<br>ثبت</button>
+<button onclick="page('stats',this)">📊<br>آمار</button>
+<button onclick="page('history',this)">📋<br>تاریخچه</button>
+<button onclick="page('backup',this)">💾<br>پشتیبان</button>
+</nav>
+
+
+<script>
+
+let trades=JSON.parse(localStorage.getItem("myTrades")||"[]");
+let editId=null;
+let result="برد";
+
+document.getElementById("date").value=
+new Date().toISOString().slice(0,10);
+
+
+function page(id,btn){
+
+document.querySelectorAll(".page")
+.forEach(x=>x.classList.remove("active"));
+
+document.getElementById(id).classList.add("active");
+
+document.querySelectorAll("nav button")
+.forEach(x=>x.classList.remove("active"));
+
+btn.classList.add("active");
+
+if(id==="stats") renderStats();
+if(id==="history") renderHistory();
+
+}
+
+
+function saveTrade(){
+
+let t={
+
+id:editId||Date.now(),
+
+result:document.getElementById("result").value,
+
+date:v("date"),
+entryTime:v("entryTime"),
+
+strategy:v("strategy"),
+parent:v("parent"),
+session:v("session"),
+direction:v("direction"),
+tf:v("tf"),
+symbol:v("symbol"),
+
+entry:v("entry"),
+sl:v("sl"),
+tp:v("tp"),
+exit:v("exit"),
+rr:v("rr"),
+risk:v("risk"),
+lot:v("lot"),
+exitTime:v("exitTime"),
+
+conditions:v("conditions"),
+notes:v("notes")
+
+};
+
+
+let index=trades.findIndex(x=>x.id===t.id);
+
+if(index>=0) trades[index]=t;
+else trades.unshift(t);
+
+localStorage.setItem("myTrades",JSON.stringify(trades));
+
+alert(index>=0?"معامله ویرایش شد":"معامله ذخیره شد");
+
+clearForm();
+renderStats();
+
+}
+
+
+function v(id){
+return document.getElementById(id).value;
+}
+
+
+function clearForm(){
+
+document.querySelectorAll("input,textarea")
+.forEach(x=>{
+if(x.id!=="date" && x.id!=="symbol")
+x.value="";
+});
+
+document.getElementById("date").value=
+new Date().toISOString().slice(0,10);
+
+document.getElementById("symbol").value="XAUUSD";
+
+editId=null;
+result="برد";
+document.getElementById("result").value="برد";
+
+}
+
+
+function calc(a){
+
+let n=a.length;
+let w=a.filter(x=>x.result==="برد").length;
+let l=n-w;
+
+let wr=n?Math.round(w/n*100):0;
+
+let rrs=a.filter(x=>Number(x.rr)>0);
+
+let avg=rrs.length?
+rrs.reduce((s,x)=>s+Number(x.rr),0)/rrs.length:0;
+
+let net=a.reduce((s,x)=>{
+if(x.result==="برد") return s+Number(x.rr||0);
+return s-1;
+},0);
+
+return {n,w,l,wr,avg,net};
+
+}
+
+
+function renderStats(){
+
+let s=calc(trades);
+
+document.getElementById("total").textContent=s.n;
+document.getElementById("wins").textContent=s.w;
+document.getElementById("losses").textContent=s.l;
+document.getElementById("winrate").textContent=s.wr+"%";
+document.getElementById("avgrr").textContent=s.avg.toFixed(2);
+document.getElementById("netr").textContent=s.net.toFixed(1)+"R";
+
+
+groupStats("strategy","strategyStats");
+groupStats("session","sessionStats");
+
+}
+
+
+function groupStats(field,target){
+
+let groups={};
+
+trades.forEach(t=>{
+let k=t[field]||"نامشخص";
+if(!groups[k])groups[k]=[];
+groups[k].push(t);
+});
+
+let html="<table><tr><th>نام</th><th>تعداد</th><th>برد</th><th>باخت</th><th>وین‌ریت</th></tr>";
+
+Object.keys(groups).forEach(k=>{
+
+let s=calc(groups[k]);
+
+html+=`
+<tr>
+<td>${k}</td>
+<td>${s.n}</td>
+<td class="win">${s.w}</td>
+<td class="loss">${s.l}</td>
+<td>${s.wr}%</td>
+</tr>`;
+
+});
+
+html+="</table>";
+
+document.getElementById(target).innerHTML=
+Object.keys(groups).length?html:"هنوز معامله‌ای ثبت نشده است.";
+
+}
+
+
+function renderHistory(){
+
+let q=(document.getElementById("search")?.value||"").toLowerCase();
+
+let a=trades.filter(t=>
+JSON.stringify(t).toLowerCase().includes(q)
+);
+
+let box=document.getElementById("historyList");
+
+if(!a.length){
+box.innerHTML="هنوز معامله‌ای ثبت نشده است.";
+return;
+}
+
+box.innerHTML=a.map(t=>`
+
+<div class="trade">
+
+<b>${t.strategy||"بدون استراتژی"}</b>
+
+<span class="${t.result==="برد"?"win":"loss"}">
+ — ${t.result}
+</span>
+
+<br>
+
+<small>
+${t.date||""} |
+${t.entryTime||""} |
+${t.session||""} |
+R:R ${t.rr||"-"}
+</small>
+
+<div class="actions">
+
+<button class="secondary"
+onclick="editTrade(${t.id})">
+✏️ ویرایش
+</button>
+
+<button class="danger"
+onclick="removeTrade(${t.id})">
+حذف
+</button>
+
+</div>
+
+</div>
+
+`).join("");
+
+}
+
+
+function editTrade(id){
+
+let t=trades.find(x=>x.id===id);
+
+if(!t)return;
+
+editId=t.id;
+
+Object.keys(t).forEach(k=>{
+
+let el=document.getElementById(k);
+
+if(el)el.value=t[k];
+
+});
+
+result=t.result;
+
+document.getElementById("result").value=result;
+
+document.querySelector("nav button").click();
+
+}
+
+
+function removeTrade(id){
+
+if(!confirm("این معامله حذف شود؟"))return;
+
+trades=trades.filter(x=>x.id!==id);
+
+localStorage.setItem("myTrades",JSON.stringify(trades));
+
+renderHistory();
+renderStats();
+
+}
+
+
+function backup(){
+
+let data={
+version:1,
+date:new Date().toISOString(),
+trades:trades
+};
+
+let blob=new Blob(
+[JSON.stringify(data,null,2)],
+{type:"application/json"}
+);
+
+let a=document.createElement("a");
+
+a.href=URL.createObjectURL(blob);
+
+a.download="trading-journal-backup.json";
+
+a.click();
+
+}
+
+
+function restore(e){
+
+let file=e.target.files[0];
+
+if(!file)return;
+
+let reader=new FileReader();
+
+reader.onload=function(){
+
+try{
+
+let data=JSON.parse(reader.result);
+
+if(!Array.isArray(data.trades))
+throw Error();
+
+trades=data.trades;
+
+localStorage.setItem(
+"myTrades",
+JSON.stringify(trades)
+);
+
+renderStats();
+renderHistory();
+
+alert("پشتیبان با موفقیت بازیابی شد");
+
+}catch{
+
+alert("فایل پشتیبان معتبر نیست");
+
+}
+
+};
+
+reader.readAsText(file);
+
+}
+
+
+function deleteAll(){
+
+if(!confirm("تمام معاملات حذف شوند؟"))return;
+
+trades=[];
+
+localStorage.setItem("myTrades","[]");
+
+renderStats();
+renderHistory();
+
+}
+
+
+renderStats();
+renderHistory();
+
+</script>
+
+</body>
+</html>
